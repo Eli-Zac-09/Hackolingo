@@ -1,41 +1,43 @@
-try {
-    process.env.LESSONS = process.env.LESSONS ?? 1; // Set the number of lessons to 1 if not already set
+const fetch = require('node-fetch');
 
-    const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.DUOLINGO_JWT}`, // Authorization header with JWT token
-        "user-agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-    };
+async function simulateXP() {
+    try {
+        const headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.DUOLINGO_JWT}`,
+            "user-agent":
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        };
 
-    const { sub } = JSON.parse(
-        Buffer.from(process.env.DUOLINGO_JWT.split(".")[1], "base64").toString(), // Decode the JWT to get the user ID
-    );
+        const { sub } = JSON.parse(
+            Buffer.from(process.env.DUOLINGO_JWT.split(".")[1], "base64").toString()
+        );
 
-    const { fromLanguage, learningLanguage } = await fetch(
-        `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage`,
-        {
-            headers,
-        },
-    ).then((response) => response.json()); // Fetch user's fromLanguage and learningLanguage
+        const { fromLanguage, learningLanguage } = await fetch(
+            `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage`,
+            { headers }
+        ).then((response) => response.json());
 
-    const lessonDuration = 2 * 1000; // 2 seconds in milliseconds
-    const xpPerInterval = 50; // XP gained per interval
+        const xpPerSecond = 50;
+        const durationInSeconds = process.env.DURATION || 60; // Default duration is 60 seconds
 
-    let elapsedTime = 0;
-    let xp = 0;
+        let xp = 0;
 
-    while (elapsedTime < process.env.LESSONS * lessonDuration) {
-        await new Promise((resolve) => setTimeout(resolve, lessonDuration)); // Wait for 2 seconds
+        const intervalId = setInterval(() => {
+            xp += xpPerSecond;
+            console.log(`🎉 You won ${xp} XP`);
 
-        xp += xpPerInterval;
-        elapsedTime += lessonDuration;
+            if (xp >= durationInSeconds * xpPerSecond) {
+                clearInterval(intervalId); // Stop the interval once the duration is reached
+            }
+        }, 1000); // Run every second
 
-        console.log(`🎉 You won ${xp} XP`); // Log total XP
-    }
-} catch (error) {
-    console.log("❌ Something went wrong"); // Generic error message
-    if (error instanceof Error) {
-        console.log(error.message); // Log specific error message
+    } catch (error) {
+        console.log("❌ Something went wrong");
+        if (error instanceof Error) {
+            console.log(error.message);
+        }
     }
 }
+
+simulateXP();
