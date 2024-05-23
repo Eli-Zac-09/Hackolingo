@@ -109,7 +109,7 @@ async function runDuolingoScript() {
           body: JSON.stringify({
             ...session,
             heartsLeft: 0,
-            startTime: (+new Date() - 1000) / 1000, // Set start time to 1 second ago
+            startTime: (+new Date() - 5000) / 1000, // Set start time to 5 seconds ago (adjust to control lesson duration)
             enableBonusPoints: false,
             endTime: +new Date() / 1000, // Set end time to now
             failed: false,
@@ -131,8 +131,8 @@ async function runDuolingoScript() {
         break;
       }
 
-      // Introduce a short delay to avoid hitting rate limits
-      await delay(100); // Adjust the delay as needed
+      // Introduce a short delay to control the rate
+      await delay(1000 / 200); // Adjust the divisor to achieve desired XP per second (200XP/s in this case)
     }
 
     console.log(`🎉 You won ${xp} XP in 1 second`); // Log total XP
