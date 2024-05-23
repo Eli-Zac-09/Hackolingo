@@ -20,7 +20,9 @@ try {
 	).then((response) => response.json()); // Fetch user's fromLanguage and learningLanguage
 
 	let xp = 0; // Initialize XP counter
-	for (let i = 0; i < process.env.LESSONS; i++) {
+	const startTime = Date.now();
+
+	while (true) {
 		const session = await fetch(
 			"https://www.duolingo.com/2017-06-30/sessions",
 			{
@@ -104,7 +106,7 @@ try {
 				body: JSON.stringify({
 					...session,
 					heartsLeft: 0,
-					startTime: (+new Date() - 6000) / 1000, // Set start time to 6 seconds ago (10x faster)
+					startTime: (+new Date() - 1000) / 1000, // Set start time to 1 second ago
 					enableBonusPoints: false,
 					endTime: +new Date() / 1000, // Set end time to now
 					failed: false,
@@ -117,9 +119,17 @@ try {
 		).then((response) => response.json());
 
 		xp += response.xpGain; // Accumulate XP
+
+		// Calculate elapsed time in seconds
+		const elapsedTime = (Date.now() - startTime) / 1000;
+
+		// If elapsed time exceeds 1 second, break the loop
+		if (elapsedTime >= 1) {
+			break;
+		}
 	}
 
-	console.log(`🎉 You won ${xp} XP`); // Log total XP
+	console.log(`🎉 You won ${xp} XP in 1 second`); // Log total XP
 } catch (error) {
 	console.log("❌ Something went wrong"); // Generic error message
 	if (error instanceof Error) {
