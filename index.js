@@ -9,43 +9,52 @@ const SESSION_PAYLOAD = {"challengeTypes":["assist","characterIntro","characterM
 
 const { sub } = JSON.parse(
   Buffer.from(process.env.DUOLINGO_JWT.split('.')[1], 'base64').toString(),
-)
+);
 
 const { fromLanguage, learningLanguage, xpGains } = await fetch(
   `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage,xpGains`,
   {
     headers,
   },
-).then(response => response.json())
+).then(response => response.json());
+
+const lessonPromises = [];
 
 for (let i = 0; i < process.env.LESSONS; i++) {
-  // Random Sleep
-  await new Promise(r => setTimeout(r, Math.random() * 0.5))
-  
-  //Start of Script
-  const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
-    body: JSON.stringify(SESSION_PAYLOAD),
-    headers,
-    method: 'POST',
-  }).then(response => response.json())
-
-  const response = await fetch(
-    `https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
-    {
-      body: JSON.stringify({
-        ...session,
-        heartsLeft: 0,
-        startTime: (+new Date() - 60000) / 1000,
-        enableBonusPoints: false,
-        endTime: +new Date() / 1000,
-        failed: false,
-        maxInLessonStreak: 9,
-        shouldLearnThings: true,
-      }),
-      headers,
-      method: 'PUT',
-    },
-  ).then(response => response.json())
-
-  console.log({ xp: response.xpGain })
+  lessonPromises.push(
+    (async () => {
+      // Random Sleep
+      await new Promise(r => setTimeout(r, Math.random() * 50)); // Reduced sleep time for faster execution
+      
+      // Start of Script
+      const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
+        body: JSON.stringify(SESSION_PAYLOAD),
+        headers,
+        method: 'POST',
+      }).then(response => response.json());
+      
+      const response = await fetch(
+        `https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
+        {
+          body: JSON.stringify({
+            ...session,
+            heartsLeft: 0,
+            startTime: (+new Date() - 60000) / 1000,
+            enableBonusPoints: false,
+            endTime: +new Date() / 1000,
+            failed: false,
+            maxInLessonStreak: 9,
+            shouldLearnThings: true,
+          }),
+          headers,
+          method: 'PUT',
+        },
+      ).then(response => response.json());
+      
+      return response.xpGain;
+    })()
+  );
 }
+
+const xpGains = await Promise.all(lessonPromises);
+xpGains.forEach(xp => console.log({ xp }));
