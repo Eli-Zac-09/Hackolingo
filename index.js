@@ -20,7 +20,7 @@ const SESSION_PAYLOAD = {"challengeTypes":["assist","characterIntro","characterM
     }).then(response => response.json())
 
     // Set a specific XP gain for each lesson
-    const xpGainPerLesson = 300; // Change this value to the desired XP gain
+    const xpGainPerLesson = 1000; // Change this value to the desired XP gain
 
     const response = await fetch(
       `https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
