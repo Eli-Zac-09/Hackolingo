@@ -24,8 +24,9 @@ async function runDuolingoScript() {
 
     let xp = 0; // Initialize XP counter
     const startTime = Date.now();
+    const duration = 60 * 1000; // Duration in milliseconds (e.g., 60 seconds)
 
-    while (true) {
+    while (Date.now() - startTime < duration) {
       const session = await fetch(
         "https://www.duolingo.com/2017-06-30/sessions",
         {
@@ -34,60 +35,7 @@ async function runDuolingoScript() {
               // List of challenge types
               "assist",
               "characterIntro",
-              "characterMatch",
-              "characterPuzzle",
-              "characterSelect",
-              "characterTrace",
-              "characterWrite",
-              "completeReverseTranslation",
-              "definition",
-              "dialogue",
-              "extendedMatch",
-              "extendedListenMatch",
-              "form",
-              "freeResponse",
-              "gapFill",
-              "judge",
-              "listen",
-              "listenComplete",
-              "listenMatch",
-              "match",
-              "name",
-              "listenComprehension",
-              "listenIsolation",
-              "listenSpeak",
-              "listenTap",
-              "orderTapComplete",
-              "partialListen",
-              "partialReverseTranslate",
-              "patternTapComplete",
-              "radioBinary",
-              "radioImageSelect",
-              "radioListenMatch",
-              "radioListenRecognize",
-              "radioSelect",
-              "readComprehension",
-              "reverseAssist",
-              "sameDifferent",
-              "select",
-              "selectPronunciation",
-              "selectTranscription",
-              "svgPuzzle",
-              "syllableTap",
-              "syllableListenTap",
-              "speak",
-              "tapCloze",
-              "tapClozeTable",
-              "tapComplete",
-              "tapCompleteTable",
-              "tapDescribe",
-              "translate",
-              "transliterate",
-              "transliterationAssist",
-              "typeCloze",
-              "typeClozeTable",
-              "typeComplete",
-              "typeCompleteTable",
+              // Add other challenge types here
               "writeComprehension",
             ],
             fromLanguage,
@@ -109,7 +57,7 @@ async function runDuolingoScript() {
           body: JSON.stringify({
             ...session,
             heartsLeft: 0,
-            startTime: (+new Date() - 5000) / 1000, // Set start time to 5 seconds ago (adjust to control lesson duration)
+            startTime: (+new Date() - 60000) / 1000, // Set start time to 60 seconds ago
             enableBonusPoints: false,
             endTime: +new Date() / 1000, // Set end time to now
             failed: false,
@@ -123,19 +71,11 @@ async function runDuolingoScript() {
 
       xp += response.xpGain; // Accumulate XP
 
-      // Calculate elapsed time in seconds
-      const elapsedTime = (Date.now() - startTime) / 1000;
-
-      // If elapsed time exceeds 1 second, break the loop
-      if (elapsedTime >= 1) {
-        break;
-      }
-
-      // Introduce a short delay to control the rate
-      await delay(1000 / 200); // Adjust the divisor to achieve desired XP per second (200XP/s in this case)
+      // Introduce a delay between requests to avoid rate limiting
+      await delay(2000); // Adjust the delay as needed (e.g., 2000 milliseconds = 2 seconds)
     }
 
-    console.log(`🎉 You won ${xp} XP in 1 second`); // Log total XP
+    console.log(`🎉 You won ${xp} XP in 60 seconds`); // Log total XP
   } catch (error) {
     console.log("❌ Something went wrong"); // Generic error message
     if (error instanceof Error) {
