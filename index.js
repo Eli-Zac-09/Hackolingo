@@ -19,15 +19,15 @@ async function runLessons() {
     }
   ).then(response => response.json());
 
+  const maxConcurrency = 5; // Adjust this value based on your memory constraints
   const lessonPromises = [];
+  const results = [];
 
   for (let i = 0; i < process.env.LESSONS; i++) {
     lessonPromises.push(
       (async () => {
-        // Random Sleep
         await new Promise(r => setTimeout(r, Math.random() * 50)); // Reduced sleep time for faster execution
 
-        // Start of Script
         const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
           body: JSON.stringify(SESSION_PAYLOAD),
           headers,
@@ -55,10 +55,20 @@ async function runLessons() {
         return response.xpGain;
       })()
     );
+
+    if (lessonPromises.length >= maxConcurrency) {
+      const result = await Promise.all(lessonPromises);
+      results.push(...result);
+      lessonPromises.length = 0;
+    }
   }
 
-  const lessonXpGains = await Promise.all(lessonPromises);
-  lessonXpGains.forEach(xp => console.log({ xp }));
+  if (lessonPromises.length > 0) {
+    const result = await Promise.all(lessonPromises);
+    results.push(...result);
+  }
+
+  results.forEach(xp => console.log({ xp }));
 }
 
 runLessons().catch(error => console.error(error));
