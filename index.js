@@ -1,74 +1,127 @@
-const headers = {
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${process.env.DUOLINGO_JWT}`,
-  'user-agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36',
-};
+try {
+	process.env.LESSONS = process.env.LESSONS ?? 1;
 
-const SESSION_PAYLOAD = {"challengeTypes":["assist","characterIntro","characterMatch","characterPuzzle","characterSelect","characterTrace","completeReverseTranslation","definition","dialogue","form","freeResponse","gapFill","judge","listen","listenComplete","listenMatch","match","name","listenComprehension","listenIsolation","listenTap","partialListen","partialReverseTranslate","patternTapComplete","readComprehension","select","selectPronunciation","selectTranscription","syllableTap","syllableListenTap","speak","tapCloze","tapClozeTable","tapComplete","tapCompleteTable","tapDescribe","translate","transliterate","typeCloze","typeClozeTable","typeCompleteTable","writeComprehension"],"fromLanguage":"en","isFinalLevel":false,"isV2":true,"juicy":true,"learningLanguage":"ja","smartTipsVersion":2,"isCustomIntroSkill":false,"isGrammarSkill":false,"levelIndex":0,"showGrammarSkillSplash":false,"skillId":"060ce4633b12e01d03c5baa22fddd7ab","type":"LESSON","levelSessionIndex":0};
+	const headers = {
+		"Content-Type": "application/json",
+		Authorization: `Bearer ${process.env.DUOLINGO_JWT}`,
+		"user-agent":
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+	};
 
-async function runLessons() {
-  const { sub } = JSON.parse(
-    Buffer.from(process.env.DUOLINGO_JWT.split('.')[1], 'base64').toString()
-  );
+	const { sub } = JSON.parse(
+		Buffer.from(process.env.DUOLINGO_JWT.split(".")[1], "base64").toString(),
+	);
 
-  const { fromLanguage, learningLanguage, xpGains: initialXpGains } = await fetch(
-    `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage,xpGains`,
-    {
-      headers,
-    }
-  ).then(response => response.json());
+	const { fromLanguage, learningLanguage } = await fetch(
+		`https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage`,
+		{
+			headers,
+		},
+	).then((response) => response.json());
 
-  const maxConcurrency = 5; // Adjust this value based on your memory constraints
-  const lessonPromises = [];
-  const results = [];
+	let xp = 0;
+	for (let i = 0; i < process.env.LESSONS; i++) {
+		const session = await fetch(
+			"https://www.duolingo.com/2017-06-30/sessions",
+			{
+				body: JSON.stringify({
+					challengeTypes: [
+						"assist",
+						"characterIntro",
+						"characterMatch",
+						"characterPuzzle",
+						"characterSelect",
+						"characterTrace",
+						"characterWrite",
+						"completeReverseTranslation",
+						"definition",
+						"dialogue",
+						"extendedMatch",
+						"extendedListenMatch",
+						"form",
+						"freeResponse",
+						"gapFill",
+						"judge",
+						"listen",
+						"listenComplete",
+						"listenMatch",
+						"match",
+						"name",
+						"listenComprehension",
+						"listenIsolation",
+						"listenSpeak",
+						"listenTap",
+						"orderTapComplete",
+						"partialListen",
+						"partialReverseTranslate",
+						"patternTapComplete",
+						"radioBinary",
+						"radioImageSelect",
+						"radioListenMatch",
+						"radioListenRecognize",
+						"radioSelect",
+						"readComprehension",
+						"reverseAssist",
+						"sameDifferent",
+						"select",
+						"selectPronunciation",
+						"selectTranscription",
+						"svgPuzzle",
+						"syllableTap",
+						"syllableListenTap",
+						"speak",
+						"tapCloze",
+						"tapClozeTable",
+						"tapComplete",
+						"tapCompleteTable",
+						"tapDescribe",
+						"translate",
+						"transliterate",
+						"transliterationAssist",
+						"typeCloze",
+						"typeClozeTable",
+						"typeComplete",
+						"typeCompleteTable",
+						"writeComprehension",
+					],
+					fromLanguage,
+					isFinalLevel: false,
+					isV2: true,
+					juicy: true,
+					learningLanguage,
+					smartTipsVersion: 2,
+					type: "GLOBAL_PRACTICE",
+				}),
+				headers,
+				method: "POST",
+			},
+		).then((response) => response.json());
 
-  for (let i = 0; i < process.env.LESSONS; i++) {
-    lessonPromises.push(
-      (async () => {
-        await new Promise(r => setTimeout(r, Math.random() * 50)); // Reduced sleep time for faster execution
+		const response = await fetch(
+			`https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
+			{
+				body: JSON.stringify({
+					...session,
+					heartsLeft: 0,
+					startTime: (+new Date() - 60000) / 1000,
+					enableBonusPoints: false,
+					endTime: +new Date() / 1000,
+					failed: false,
+					maxInLessonStreak: 9,
+					shouldLearnThings: true,
+				}),
+				headers,
+				method: "PUT",
+			},
+		).then((response) => response.json());
 
-        const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
-          body: JSON.stringify(SESSION_PAYLOAD),
-          headers,
-          method: 'POST',
-        }).then(response => response.json());
+		xp += response.xpGain;
+	}
 
-        const response = await fetch(
-          `https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
-          {
-            body: JSON.stringify({
-              ...session,
-              heartsLeft: 0,
-              startTime: (+new Date() - 60000) / 1000,
-              enableBonusPoints: false,
-              endTime: +new Date() / 1000,
-              failed: false,
-              maxInLessonStreak: 9,
-              shouldLearnThings: true,
-            }),
-            headers,
-            method: 'PUT',
-          }
-        ).then(response => response.json());
-
-        return response.xpGain;
-      })()
-    );
-
-    if (lessonPromises.length >= maxConcurrency) {
-      const result = await Promise.all(lessonPromises);
-      results.push(...result);
-      lessonPromises.length = 0;
-    }
-  }
-
-  if (lessonPromises.length > 0) {
-    const result = await Promise.all(lessonPromises);
-    results.push(...result);
-  }
-
-  results.forEach(xp => console.log({ xp }));
+	console.log(`🎉 You won ${xp} XP`);
+} catch (error) {
+	console.log("❌ Something went wrong");
+	if (error instanceof Error) {
+		console.log(error.message);
+	}
 }
-
-runLessons().catch(error => console.error(error));
