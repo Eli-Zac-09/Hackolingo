@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
 async function simulateXP() {
     try {
@@ -37,6 +37,7 @@ async function simulateXP() {
         if (error instanceof Error) {
             console.log(error.message);
         }
+        process.exit(1); // Exit with a non-zero code to indicate failure
     }
 }
 
