@@ -24,7 +24,7 @@ for (let i = 0; i < process.env.LESSONS; i++) {
   lessonPromises.push(
     (async () => {
       // Random Sleep
-      await new Promise(r => setTimeout(r, Math.random() * 50)); // Reduced sleep time for faster execution
+      await new Promise(r => setTimeout(r, Math.random() * 0.5)); // Reduced sleep time for faster execution
       
       // Start of Script
       const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
