@@ -20,7 +20,7 @@ const { fromLanguage, learningLanguage, xpGains } = await fetch(
 
 for (let i = 0; i < process.env.LESSONS; i++) {
   // Random Sleep
-  await new Promise(r => setTimeout(r, Math.random() * 10000))
+  await new Promise(r => setTimeout(r, Math.random() * 10))
   
   //Start of Script
   const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
