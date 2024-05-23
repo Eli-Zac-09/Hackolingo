@@ -10,7 +10,7 @@ const SESSION_PAYLOAD = {"challengeTypes":["assist","characterIntro","characterM
 (async () => {
   for (let i = 0; i < process.env.LESSONS; i++) {
     // Random Sleep
-    await new Promise(r => setTimeout(r, Math.random() * 1))
+    await new Promise(r => setTimeout(r, Math.random() * 0.5))
     
     //Start of Script
     const session = await fetch('https://www.duolingo.com/2017-06-30/sessions', {
